@@ -12,16 +12,20 @@ class Git_Deploy {
 		add_action( 'muplugins_loaded', array( $this, 'check_for_request' ) );
 		add_action( 'plugins_loaded', array( $this, 'check_for_request' ) ); // just in case this isn't a muplugin
 
-		add_action( 'network_admin_menu', array($this, 'register_network_admin_page'), 10, 0);
-		add_action( 'network_admin_edit_'.self::SLUG, array($this, 'save_network_admin_page'), 10, 0);
+		if ( is_multisite() ) {
+			add_action( 'network_admin_menu', array($this, 'register_network_admin_page'), 10, 0);
+			add_action( 'network_admin_edit_'.self::SLUG, array($this, 'save_network_admin_page'), 10, 0);
+		} else {
+			add_action( 'admin_menu', array( $this, 'register_network_admin_page' ), 10, 0 );
+		}
 	}
 
 	public function register_network_admin_page() {
 		add_submenu_page(
-			'settings.php',
+			is_multisite()?'settings.php':'options-general.php',
 			__('Git Deployment', 'git-info'),
 			__('Deployment', 'git-info'),
-			'manage_network',
+			is_multisite()?'manage_network':'manage_options',
 			self::SLUG,
 			array($this, 'display_network_admin_page')
 		);
@@ -47,11 +51,18 @@ class Git_Deploy {
 			array($this, 'display_deploy_now_settings_section'),
 			self::SLUG
 		);
+
+		if ( !is_multisite() ) {
+			register_setting(
+				'git-deployment-ip-addresses',
+				self::SLUG
+			);
+		}
 	}
 
 	public function display_network_admin_page() {
 		$title = __('Git Deployment', 'git-info');
-		require_once('views/network-admin.php');
+		require_once( 'views/network-admin.php' );
 	}
 
 	public function save_network_admin_page() {
@@ -108,11 +119,19 @@ class Git_Deploy {
 	}
 
 	private function get_option( $option, $default = FALSE ) {
-		return get_blog_option(BLOG_ID_CURRENT_SITE, $option, $default);
+		if ( defined('BLOG_ID_CURRENT_SITE') ) {
+			return get_blog_option(BLOG_ID_CURRENT_SITE, $option, $default);
+		} else {
+			return get_option($option, $default);
+		}
 	}
 
 	private function set_option( $option, $value ) {
-		return update_blog_option(BLOG_ID_CURRENT_SITE, $option, $value);
+		if ( defined('BLOG_ID_CURRENT_SITE') ) {
+			update_blog_option(BLOG_ID_CURRENT_SITE, $option, $value);
+		} else {
+			update_option($option, $value);
+		}
 	}
 
 	public function check_for_request() {

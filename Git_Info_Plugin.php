@@ -65,9 +65,6 @@ class Git_Info_Plugin {
 		$branch = trim(file_get_contents($head_file));
 		$branch = str_replace('ref: ', '', $branch);
 		$revision_file = ABSPATH.'.git'.DIRECTORY_SEPARATOR.$branch;
-		if ( !file_exists($revision_file) ) {
-			return $info;
-		}
 		$revision = file_get_contents($revision_file);
 		$info = array(
 			'branch' => rtrim($branch),
