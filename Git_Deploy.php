@@ -174,7 +174,7 @@ class Git_Deploy {
 
 	private function do_pull() {
 		$path = ABSPATH;
-		$cmd = 'cd '.$path.'; git fetch; git reset --hard $(git rev-parse --symbolic-full-name @{u}); git submodule update --recursive;';
+		$cmd = 'cd '.$path.'; git fetch; git reset --hard $(git rev-parse --symbolic-full-name @{u}); git submodule update --recursive --init;';
 		$message = "$ $cmd<br />";
 		exec( $cmd, $output, $return );
 		$message .= implode('<br />', $output);
